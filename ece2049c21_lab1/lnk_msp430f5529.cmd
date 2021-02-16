@@ -1,5 +1,5 @@
 /* ============================================================================ */
-/* Copyright (c) 2020, Texas Instruments Incorporated                           */
+/* Copyright (c) 2017, Texas Instruments Incorporated                           */
 /*  All rights reserved.                                                        */
 /*                                                                              */
 /*  Redistribution and use in source and binary forms, with or without          */
@@ -44,7 +44,7 @@
 /* -heap   0x0100                                   HEAP AREA SIZE            */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* Version: 1.210                                                             */
+/* Version: 1.200                                                             */
 /*----------------------------------------------------------------------------*/
 
 /****************************************************************************/
@@ -63,7 +63,7 @@ MEMORY
     INFOC                   : origin = 0x1880, length = 0x0080
     INFOD                   : origin = 0x1800, length = 0x0080
     FLASH                   : origin = 0x4400, length = 0xBB80
-    FLASH2                  : origin = 0x10000,length = 0x143F8 /* Boundaries changed to fix CPU47 */
+    FLASH2                  : origin = 0x10000,length = 0x14400
     INT00                   : origin = 0xFF80, length = 0x0002
     INT01                   : origin = 0xFF82, length = 0x0002
     INT02                   : origin = 0xFF84, length = 0x0002
@@ -142,7 +142,7 @@ SECTIONS
     .sysmem     : {} > RAM                  /* Dynamic memory allocation area    */
     .stack      : {} > RAM (HIGH)           /* Software system stack             */
 
-#ifndef __LARGE_CODE_MODEL__
+#ifndef __LARGE_DATA_MODEL__
     .text       : {} > FLASH                /* Code                              */
 #else
     .text       : {} >> FLASH2 | FLASH      /* Code                              */
@@ -163,7 +163,7 @@ SECTIONS
     .mspabi.extab : {} > FLASH              /* C++ Constructor tables            */
 #ifdef __TI_COMPILER_VERSION__
   #if __TI_COMPILER_VERSION__ >= 15009000
-    #ifndef __LARGE_CODE_MODEL__
+    #ifndef __LARGE_DATA_MODEL__
     .TI.ramfunc : {} load=FLASH, run=RAM, table(BINIT)
     #else
     .TI.ramfunc : {} load=FLASH | FLASH2, run=RAM, table(BINIT)
