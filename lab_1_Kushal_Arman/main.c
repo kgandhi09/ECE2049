@@ -9,25 +9,27 @@ void swDelay(char numLoops);
 int check(char array1[], char array2[]);
 
 
-
 // Main
 void main(void)
 
 {
-    unsigned char currKey=0;
-    int count = 1;
-    char number = 0;
-    int i;
-    unsigned char dispThree[3];
+    unsigned char currKey=0;        //declaring an unsigned char currKey with value 0 of size of 1 bytes
+    int count = 1;                  //declaring an integer count with value 1 of size 2 bytes
+    char number = 0;                //declaring a char number with value 0 of size of 1 bytes
+    int i;                          //initializing an integer i
+    unsigned char dispThree[3];     ////declaring an unsigned char array dispThree with 3 elements of size of 3 bytes
+
+
+    //setting 1st and 3rd element of dispThree array
     dispThree[0] = ' ';
     dispThree[2] = ' ';
-    // Define some local variables
+
 
     WDTCTL = WDTPW | WDTHOLD;
     P1SEL = P1SEL & ~BIT0;          // Select P1.0 for digital IO
     P1DIR |= BIT0;                  // Set P1.0 to output direction
-    P4SEL = P4SEL & ~BIT7;          // Select P1.0 for digital IO
-    P4DIR |= BIT7;                  // Set P1.0 to output direction
+    P4SEL = P4SEL & ~BIT7;          // Select P4.0 for digital IO
+    P4DIR |= BIT7;                  // Set P4.0 to output direction
     __disable_interrupt();// Stop watchdog timer. Always need to stop this!!
                                  // You can then configure it properly, if desired
     // Useful code starts here
@@ -50,19 +52,23 @@ void main(void)
 
     Graphics_flushBuffer(&g_sContext);
 
-    char arr[30] = 0;
-    char gameInput[30] = 0;
+    char arr[30] = 0;               ////declaring an char array arr with 30 element, all with value 0 of size 30 bytes
+    char gameInput[30] = 0;         ////declaring an char array gameInput with 30 element, all with value 0 of size 30 bytes
 
     while (1)    // Forever loop
     {
+
+        // a switch statement with expression currKey
         switch(currKey){
 
+        //Welcom screen state which waits for '*' input from keypad
         case 0:
             Graphics_drawStringCentered(&g_sContext, "SIMON", AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT);
             Graphics_flushBuffer(&g_sContext);
             currKey = getKey();
             break;
 
+        //Countdown state, once '*' is pressed, LCD display 3..2..1.. with delay of 1 second(s)
         case '*':
             Graphics_clearDisplay(&g_sContext); // Clear the display
             Graphics_drawStringCentered(&g_sContext, "3", AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT);
@@ -83,11 +89,16 @@ void main(void)
             currKey = 1;
             break;
 
-        case 1:
-            number = ((rand()%4) + 1) + '0';
-            arr[count-1] = number;
-            arr[count] = '\0';
 
+         //Main game play state
+        case 1:
+            number = ((rand()%4) + 1) + '0'; //generating a random number between 1-4
+
+            arr[count-1] = number; // storing randomly generated number in the arr[]
+            arr[count] = '\0';     // storing a null character at the end to determine end of the string
+
+
+            // a while loop to diplay one value at one time with spatial allignment
             int j = 0;
             while(1){
                 dispThree[1] = arr[j];
@@ -124,10 +135,13 @@ void main(void)
             Graphics_clearDisplay(&g_sContext); // Clear the display
             swDelay(1);
 
+
+            //while loop to take the user input, light up LED, make the buzzer sound and display the numbers input
             int i = 0;
             while(1){
                 currKey = getKey();
                 if(currKey){
+                    //code reused from previous lab for LED and Buzzer sound.
                     P1OUT = P1OUT ^ BIT0;
                     P4OUT = P4OUT ^ BIT7;
                     BuzzerOn();
@@ -140,14 +154,16 @@ void main(void)
 
                     dispThree[1] = gameInput[i];
 
-                    if(gameInput[i] != arr[i]){
-                        currKey = 2;
+                    //checking algorithm
+                    if(gameInput[i] != arr[i]){ // if pressed a wrong input then generated
+                        currKey = 2;   //end screen state
                         break;
                     }
-                    else{
-                        currKey = 1;
+                    else{ //else
+                        currKey = 1; //current state - main game state
                     }
 
+                    //display the value with spatial alignment
                     if(dispThree[1] == '1'){
                         Graphics_drawStringCentered(&g_sContext, dispThree, 3, 14, 50, OPAQUE_TEXT); //displaying player input
                         Graphics_flushBuffer(&g_sContext);
@@ -182,6 +198,7 @@ void main(void)
             count++;
             break;
 
+        //Emd game state which displays a humility message, and naturally transit to the welcome screen/ init state of the game.
         case 2:
             Graphics_drawStringCentered(&g_sContext, "Simon Says Loser!", AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT); //displaying player input
             Graphics_flushBuffer(&g_sContext);
