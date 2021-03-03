@@ -5,26 +5,12 @@
 #include <stdio.h>
 
 // Function Prototypes
-int check(char array1[], char array2[]);
 void runTimerA2();
 void stopTimerA2();
 void configureRegsiters();
 
 long unsigned int timer=0;
 long unsigned int leapCount = 0;
-int temp = 5;
-
-void configureRegisters(){
-    UCSCTL0 = 0x14B8;
-    UCSCTL1 = 0x0020;
-    UCSCTL2 = 0x101F;
-    UCSCTL3 = 0x0000;
-    UCSCTL4 = 0x0044;
-    UCSCTL5 = 0x0000;
-    UCSCTL6 = 0xC1CD;
-    UCSCTL7 = 0x0403;
-    UCSCTL8 = 0x0707;
-}
 
 // Main
 void main(void)
@@ -37,6 +23,8 @@ void main(void)
     char number = 0;                //declaring a char number with value 0 of size of 1 bytes
     int i;                          //initializing an integer i
     unsigned char dispThree[3];     ////declaring an unsigned char array dispThree with 3 elements of size of 3 bytes
+    float elapsed_sec = 0;
+    int countdown = 1;
 
     _BIS_SR(GIE);                   //enable global interrupt
 
@@ -70,7 +58,7 @@ void main(void)
         // a switch statement with expression currKey
         switch(currKey){
 
-        //Welcom2 screen state which waits for '*' input from keypad
+        //Welcome2 screen state which waits for '*' input from keypad
         case 0:
             Graphics_drawStringCentered(&g_sContext, "Press '*'", AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT);
             Graphics_drawStringCentered(&g_sContext, "to begin...", AUTO_STRING_LENGTH, 64, 60, OPAQUE_TEXT);
@@ -90,29 +78,56 @@ void main(void)
             currKey = getKey();
             if(currKey == '1' || currKey == '2'){
                 temp_curr = currKey;
+                clear_flag = 1;
                 currKey = 'c';
             }
             else{
                 currKey = '*';
             }
             break;
-        //countdown state
+
+            //countdown state
         case 'c':
-            currKey = temp_curr;
-            char i = 3;
-            while(1){
-                runTimerA2();
-                if(timer>32600){
-                    Graphics_clearDisplay(&g_sContext);
-                    Graphics_drawStringCentered(&g_sContext, i , AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT);
-                    Graphics_flushBuffer(&g_sContext);
-                    stopTimerA2(1);
-                }
-                i--;
+            if(clear_flag){
+//                dispThree[1] = '3';
+//                Graphics_clearDisplay(&g_sContext);
+//                Graphics_drawStringCentered(&g_sContext, dispThree , 3, 64, 50, OPAQUE_TEXT);
+                Graphics_flushBuffer(&g_sContext);
+
             }
+            clear_flag = 0;
+            int i = 0;
+            char temp;
+            runTimerA2();
+            while(1){
+                elapsed_sec = (timer*1.1)/163;
+                if(elapsed_sec > (countdown) && countdown<4){
+                    if(countdown == 1){temp = (countdown+2) + '0';}
+                    if(countdown == 2){temp = countdown + '0';}
+                    if(countdown == 3){temp = (countdown-2) + '0';}
+                    dispThree[1] = temp;
+                    Graphics_clearDisplay(&g_sContext);
+                    Graphics_drawStringCentered(&g_sContext, dispThree , 3, 64, 50, OPAQUE_TEXT);
+                    Graphics_flushBuffer(&g_sContext);
+                    countdown++;
+                }
+                if(elapsed_sec>4){
+                    currKey = temp_curr;
+                    break;
+                }
+                i++;
+            }
+            break;
+
+        case '1':
+            Graphics_clearDisplay(&g_sContext);
         }
     }
 }
+
+
+
+
 
 void runTimerA2(void) {
     // This function configures and starts Timer A2
@@ -139,3 +154,14 @@ __interrupt void TimerA2_ISR (void) {
     }
 }
 
+void configureRegisters(){
+    UCSCTL0 = 0x14B8;
+    UCSCTL1 = 0x0020;
+    UCSCTL2 = 0x101F;
+    UCSCTL3 = 0x0000;
+    UCSCTL4 = 0x0044;
+    UCSCTL5 = 0x0000;
+    UCSCTL6 = 0xC1CD;
+    UCSCTL7 = 0x0403;
+    UCSCTL8 = 0x0707;
+}
