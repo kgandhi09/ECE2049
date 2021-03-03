@@ -25,6 +25,7 @@ void stopTimerA2();
 void configureRegsiters();
 void customBuzzerOn(int frequency);
 int playNote(int note, float duration);
+void swDelay(char numLoops);
 
 long unsigned int timer=0;
 long unsigned int leapCount = 0;
@@ -87,6 +88,7 @@ void main(void)
 
         //Welcome2 screen state which waits for '*' input from keypad
         case 0:
+            Graphics_drawStringCentered(&g_sContext, "Welcome to Boombox'", AUTO_STRING_LENGTH, 64, 35, OPAQUE_TEXT);
             Graphics_drawStringCentered(&g_sContext, "Press '*'", AUTO_STRING_LENGTH, 64, 50, OPAQUE_TEXT);
             Graphics_drawStringCentered(&g_sContext, "to begin...", AUTO_STRING_LENGTH, 64, 60, OPAQUE_TEXT);
             Graphics_flushBuffer(&g_sContext);
@@ -170,13 +172,6 @@ void main(void)
             counter++;
             if(clear_flag == 1){
                 Graphics_clearDisplay(&g_sContext);
-                Graphics_drawStringCentered(&g_sContext, "Happy Birthday" , AUTO_STRING_LENGTH, 64, 20, OPAQUE_TEXT);
-                Graphics_drawStringCentered(&g_sContext, "Playing" , AUTO_STRING_LENGTH, 64, 40, OPAQUE_TEXT);
-                Graphics_drawStringCentered(&g_sContext, "1. Play/Pause" , AUTO_STRING_LENGTH, 64, 70, OPAQUE_TEXT);
-                Graphics_drawStringCentered(&g_sContext, "2. Slower" , AUTO_STRING_LENGTH, 64, 80, OPAQUE_TEXT);
-                Graphics_drawStringCentered(&g_sContext, "3. Faster" , AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
-                Graphics_drawStringCentered(&g_sContext, "4. Return" , AUTO_STRING_LENGTH, 64, 100, OPAQUE_TEXT);
-                Graphics_flushBuffer(&g_sContext);
                 clear_flag = 0;
             }
 
@@ -184,89 +179,87 @@ void main(void)
             float hbDurations[25] = {0.25, 0.125,0.5,0.5,0.5,1,0.25,0.125,0.5,0.5,0.5,1,0.25,0.125,0.5,0.5,0.5,0.5,0.5,0.125,0.5,0.5,0.5,1,0.125};
             int j = 0;
             int buzzer_flag = 0;
-
+            int count = 0;
+            int init_flag = 1;
+            unsigned char pause_temp = 0;
 
             while(1){
                 s1_key = getKey();
-                if(s1_key == '1'){
-                    s1_key == 0;
+
+                if(s1_key == '1' && count%2 == 0){
+                    init_flag = 0;
                     stopTimerA2(1);
                     BuzzerOff();
-                    Graphics_clearDisplay(&g_sContext);
-                    Graphics_drawStringCentered(&g_sContext, "Happy Birthday" , AUTO_STRING_LENGTH, 64, 20, OPAQUE_TEXT);
-                    Graphics_drawStringCentered(&g_sContext, "Paused" , AUTO_STRING_LENGTH, 64, 40, OPAQUE_TEXT);
-                    Graphics_drawStringCentered(&g_sContext, "1. Play/Pause" , AUTO_STRING_LENGTH, 64, 70, OPAQUE_TEXT);
-                    Graphics_drawStringCentered(&g_sContext, "2. Slower" , AUTO_STRING_LENGTH, 64, 80, OPAQUE_TEXT);
-                    Graphics_drawStringCentered(&g_sContext, "3. Faster" , AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
-                    Graphics_drawStringCentered(&g_sContext, "4. Return" , AUTO_STRING_LENGTH, 64, 100, OPAQUE_TEXT);
-                    Graphics_flushBuffer(&g_sContext);
-                    clear_flag = 1;
-                    while(1){
-                        s1_key = getKey();
-                        if(s1_key == '1'){
-                            s1_key = 0;
-                            break;
-                        }
-                    }
-                }
-                if(s1_key == '4'){
-                    currKey = '*';
-                    clear_flag = 1;
-                    tolerance = 0;
-                    elapsed_sec = 0;
-                    countdown = 1;
-                    stopTimerA2(1);
-                    BuzzerOff();
-                    break;
-                }
-                if(s1_key == '#'){
-                    clear_flag = 1;
-                    currKey = 0;
-                    elapsed_sec = 0;
-                    tolerance = 0;
-                    countdown = 1;
-                    stopTimerA2(1);
-                    BuzzerOff();
-                    break;
-                }
-                if(s1_key == '2' && slow_flag){
-                    tolerance += 1.2;
-                    slow_flag = 0;
                     s1_key = 0;
+                    count++;
+
                 }
-                if(s1_key == '3' && slow_flag){
-                    if(tolerance == 0){
-                        tolerance = 1/(tolerance+1.00001);
+
+                if(s1_key == '1' && count%2 == 1){
+                    init_flag = 1;
+                    s1_key = 0;
+                    count++;
+                }
+
+                if(init_flag){
+                    if(s1_key == '4'){
+                        currKey = '*';
+                        clear_flag = 1;
+                        tolerance = 0;
+                        elapsed_sec = 0;
+                        countdown = 1;
+                        stopTimerA2(1);
+                        BuzzerOff();
+                        break;
+                    }
+                    if(s1_key == '#'){
+                        clear_flag = 1;
+                        currKey = 0;
+                        elapsed_sec = 0;
+                        tolerance = 0;
+                        countdown = 1;
+                        stopTimerA2(1);
+                        BuzzerOff();
+                        break;
+                    }
+                    if(s1_key == '2' && slow_flag){
+                        tolerance += 1.2;
+                        slow_flag = 0;
+                        s1_key = 0;
+                    }
+                    if(s1_key == '3' && slow_flag){
+                        if(tolerance == 0){
+                            tolerance = 1/(tolerance+1.00001);
+                        }
+                        else{
+                            tolerance = tolerance/((tolerance/4)+1.00001);
+                        }
+                        slow_flag = 0;
+                        s1_key = 0;
+                    }
+                    if(tolerance > 0){
+                        buzzer_flag = playNote(hbNotes[j], hbDurations[j]*tolerance);
                     }
                     else{
-                        tolerance = tolerance/((tolerance/2)+1.00001);
+                        buzzer_flag = playNote(hbNotes[j], hbDurations[j]);
                     }
-                    slow_flag = 0;
-                    s1_key = 0;
-                }
-                if(tolerance > 0){
-                    buzzer_flag = playNote(hbNotes[j], hbDurations[j]*tolerance);
-                }
-                else{
-                    buzzer_flag = playNote(hbNotes[j], hbDurations[j]);
-                }
 
-                if(buzzer_flag){
-                    j++;
-                    slow_flag = 1;
-                    buzzer_flag = 0;
+                    if(buzzer_flag){
+                        j++;
+                        slow_flag = 1;
+                        buzzer_flag = 0;
+                    }
+                    if(j > 24){
+                        currKey = '*';
+                        clear_flag = 1;
+                        elapsed_sec = 0;
+                        tolerance = 0;
+                        countdown = 1;
+                        stopTimerA2();
+                        BuzzerOff();
+                        break;
+                    }
                 }
-                if(j > 24){
-                    currKey = '*';
-                    clear_flag = 1;
-                    elapsed_sec = 0;
-                    tolerance = 0;
-                    countdown = 1;
-                    stopTimerA2();
-                    BuzzerOff();
-                    break;
-                }
-
             }
         }
     }
@@ -347,4 +340,26 @@ void configureRegisters(){
     UCSCTL6 = 0xC1CD;
     UCSCTL7 = 0x0403;
     UCSCTL8 = 0x0707;
+}
+
+void swDelay(char numLoops)
+{
+    // This function is a software delay. It performs
+    // useless loops to waste a bit of time
+    //
+    // Input: numLoops = number of delay loops to execute
+    // Output: none
+    //
+    // smj, ECE2049, 25 Aug 2013
+    // hamayel qureshi, 28 march 2020
+
+    volatile unsigned int i,j;  // volatile to prevent removal in optimization
+    // by compiler. Functionally this is useless code
+
+    for (j=0; j<numLoops; j++)
+    {
+        i = 50000 ;                 // SW Delay
+        while (i > 0)               // could also have used while (i)
+            i--;
+    }
 }
